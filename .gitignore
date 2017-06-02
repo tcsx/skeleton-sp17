@@ -9,6 +9,8 @@ spec/
 *.class
 .settings/
 .vscode/
+.classpath
+.project
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
