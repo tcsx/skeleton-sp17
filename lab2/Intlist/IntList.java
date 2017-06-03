@@ -80,12 +80,15 @@ public class IntList {
      */
 
     public static IntList dcatenate(IntList A, IntList B) {
-        IntList orgList = A;
-        while (A != null) {
-            A = A.rest;
-        }
-        A = B;
-        return orgList;
+        if (A == null) {
+			return A = B;
+		}
+        IntList ptr = A;
+        while (ptr.rest != null) {
+			ptr = ptr.rest;
+		}
+        ptr.rest = B;
+        return A;
     }
 
     /**
@@ -96,15 +99,8 @@ public class IntList {
         if (A == null) {
             return B;
         }
-        IntList newList;
-        IntList ptr = newList;
-        while (A != null) {
-            ptr = new IntList(A.first, null);
-            ptr = ptr.rest;
-            A = A.rest;
-        }
-        ptr = B;
-        return newList;
+        
+        return new IntList(A.first, catenate(A.rest, B));
     }
 
 
@@ -206,7 +202,8 @@ public class IntList {
     /** Outputs the IntList as a String. You are not expected to read
      * or understand this method. */
     public String toString() {
-        Formatter out = new Formatter();
+        @SuppressWarnings("resource")
+		Formatter out = new Formatter();
         String sep;
         sep = "(";
         int cycleLocation = detectCycles(this);
