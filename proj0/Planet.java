@@ -5,7 +5,7 @@ public class Planet {
     public double yyVel;
     public double mass;
     public String imgFileName;
-
+    public static final String IMG_DIR = "./images/";
     public Planet(double xP, double yP, double xV, double yV, double m, String img) {
         xxPos = xP;
         yyPos = yP;
@@ -57,5 +57,8 @@ public class Planet {
         yyVel = yyVel + fY / mass * dt;
         xxPos += xxVel * dt;
         yyPos += yyVel * dt;
+    }
+    public void draw(){
+        StdDraw.picture(xxPos, yyPos,IMG_DIR + imgFileName);
     }
 }
