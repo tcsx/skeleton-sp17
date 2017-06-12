@@ -1,5 +1,5 @@
 /** Performs some basic linked list tests. */
-public class LinkedListDequeTest {
+public class ArrayDequeTest {
 	
 	/* Utility method for printing out empty checks. */
 	public static boolean checkEmpty(boolean expected, boolean actual) {
@@ -19,6 +19,7 @@ public class LinkedListDequeTest {
 		return true;
 	}
 
+
 	public static boolean checkEqual(Integer expected, Integer actual){
         if (expected == null) {
             if (actual == null) {
@@ -33,7 +34,6 @@ public class LinkedListDequeTest {
 		}
 		return true;
 	}
-
 	/* Prints a nice message based on whether a test passed. 
 	 * The \n means newline. */
 	public static void printTestStatus(boolean passed) {
@@ -51,7 +51,7 @@ public class LinkedListDequeTest {
 	public static void addIsEmptySizeTest() {
 		System.out.println("Running add/isEmpty/Size test.");
 		
-		LinkedListDeque<String> lld1 = new LinkedListDeque<String>();
+		ArrayDeque<String> lld1 = new ArrayDeque<String>();
 
 		boolean passed = checkEmpty(true, lld1.isEmpty());
 
@@ -79,7 +79,7 @@ public class LinkedListDequeTest {
 
 		System.out.println("Running add/remove test.");
 
-		LinkedListDeque<Integer> lld1 = new LinkedListDeque<Integer>();
+		ArrayDeque<Integer> lld1 = new ArrayDeque<Integer>();
 		// should be empty 
 		boolean passed = checkEmpty(true, lld1.isEmpty());
 
@@ -99,24 +99,36 @@ public class LinkedListDequeTest {
 	public static void addGetTest(){
 		System.out.println("Running add/get test.");
 		
-		LinkedListDeque<Integer> lld1 = new LinkedListDeque<>();
+		ArrayDeque<Integer> lld1 = new ArrayDeque<>();
 		lld1.addFirst(1);
 		lld1.addLast(4);
 		lld1.addLast(7);
 		lld1.addLast(8);
 		lld1.removeLast();
+        lld1.addLast(21);
+		lld1.addFirst(9);
+		lld1.addFirst(11);
+		lld1.addFirst(13);
+		lld1.addFirst(15);
+		lld1.addFirst(17);
+		lld1.addFirst(19);
 
-		boolean passed = checkSize(3, lld1.size());
-		System.out.println("iterative get:");
-		passed = checkEqual(4, lld1.get(1)) && passed;
-		passed = checkEqual(1, lld1.get(0)) && passed;
-		passed = checkEqual(null, lld1.get(6)) && passed;
-		System.out.println("recursive get:");
-		passed = checkEqual(4, lld1.getRecursive(1)) && passed;
-		passed = checkEqual(1, lld1.getRecursive(0)) && passed;
-		passed = checkEqual(null, lld1.getRecursive(6)) && passed;
 
-		printTestStatus(passed);
+		boolean passed = checkSize(10, lld1.size());
+		System.out.println("get:");
+		passed = checkEqual(9, lld1.get(5)) && passed;
+		passed = checkEqual(19, lld1.get(0)) && passed;
+		passed = checkEqual(null, lld1.get(33)) && passed;
+        System.out.println(lld1.get(9));
+		ArrayDeque<Integer> lld2 = new ArrayDeque<>();
+        for(int i = 0; i < 100; i++) {
+            lld2.addLast(i * 2);
+        }
+        for(int i = 0; i < 70; i++) {
+            lld2.removeFirst();
+        }
+        passed = checkEqual(142, lld2.get(1)) && passed;
+        printTestStatus(passed);
 		
 	}
 	public static void main(String[] args) {
