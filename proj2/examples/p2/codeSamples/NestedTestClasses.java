@@ -1,4 +1,5 @@
 package p2.codeSamples;
+
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -31,22 +32,24 @@ public class NestedTestClasses {
 		return value;
 	}
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+	@Override
+	public boolean equals(Object o) {
+		if (this == o)
+			return true;
+		if (o == null || getClass() != o.getClass())
+			return false;
 
-        NestedTestClasses that = (NestedTestClasses) o;
+		NestedTestClasses that = (NestedTestClasses) o;
 
-        return value == that.value;
-    }
+		return value == that.value;
+	}
 
-    @Override
-    public int hashCode() {
-        return value;
-    }
+	@Override
+	public int hashCode() {
+		return value;
+	}
 
-    public static class TestTheOuterClassPrivateMethods {
+	public static class TestTheOuterClassPrivateMethods {
 		@Test
 		public void testSquare() {
 			NestedTestClasses x = new NestedTestClasses(10);
@@ -61,12 +64,17 @@ public class NestedTestClasses {
 			assertEquals(30, x.value());
 		}
 
-        @Test
-        public void testValueEquals() {
-            NestedTestClasses x = new NestedTestClasses(20);
-            x.accumulate(10);
-            NestedTestClasses y = new NestedTestClasses(30);
-            assertEquals(y, x);
-        }
+		@Test
+		public void testValueEquals() {
+			NestedTestClasses x = new NestedTestClasses(20);
+			x.accumulate(10);
+			NestedTestClasses y = new NestedTestClasses(30);
+			assertEquals(y, x);
+		}
+
 	}
-} 
+
+	public static void main(String[] args) {
+		jh61b.junit.TestRunner.runTests("all", TestTheOuterClassPrivateMethods.class);
+	}
+}
