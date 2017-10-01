@@ -23,6 +23,10 @@ public class Database {
         tables = new HashMap<String, Table>();
     }
 
+    public void addTable(String name, Table tb){
+        tables.put(name, tb);
+    }
+    
     /**
      * Create and add a table to the database.
      * @param name
@@ -69,7 +73,7 @@ public class Database {
                 String rowExper;
                 while ((rowExper = in.readLine()) != null) {
                     String[] row = Parser.parseRow(rowExper);
-                    if (!table.insertRow(row))
+                    if (!table.insertRow(row, true))
                         return;
                 }
                 tables.put(name, table);
@@ -89,7 +93,11 @@ public class Database {
     }
 
     public void insertRowInto(String name, String[] row) {
-        getTable(name).insertRow(row);
+    	if (!tables.containsKey(name)) {
+			printNotExist(name);
+			return;
+		}
+        getTable(name).insertRow(row, false);
     }
 
     /**
@@ -97,7 +105,7 @@ public class Database {
      * @param name Table name;
      */
     public static void printNotExist(String name) {
-        System.err.printf("ERROR: The TABLE NAMED %s DOESN'T EXIST.\r\n", name);
+        System.err.printf("ERROR: THE TABLE NAMED %s DOESN'T EXIST.\r\n", name);
         return;
     }
 
@@ -129,7 +137,7 @@ public class Database {
                 file.createNewFile();
             }
             fout = new BufferedWriter(new FileWriter(file));
-            fout.write(this.getTable(name).toString());
+            fout.write(this.getTable(name).toString(false));
             fout.flush();
         } catch (Exception e) {
             System.err.println("ERROR: STORE FILE FAILED.");
@@ -160,8 +168,7 @@ public class Database {
      * @param query Command passed to this function
      * @return String message as a result of the executed command
      */
-    public String transact(String query) {
-        Database db = new Database();
-        return "YOUR CODE HERE";
+    public static void transact(String query, Database db) {
+        Parser.eval(query, db);
     }
 }

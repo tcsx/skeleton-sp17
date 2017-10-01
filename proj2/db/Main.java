@@ -11,7 +11,7 @@ import db.Database;
  */
 public class Main {
     private static final String EXIT   = "exit";
-    private static final String PROMPT = "> ";
+    public static final String PROMPT = "> ";
 
     public static void main(String[] args) throws IOException {
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
@@ -25,14 +25,15 @@ public class Main {
             }
 
             if (!line.trim().isEmpty()) {
-                String result = db.transact(line);
-                if (result.length() > 0) {
-                    System.out.println(result);
-                }
+                Database.transact(line, db);
             }
             System.out.print(PROMPT);
         }
 
         in.close();
     }
+
+    // public static void printPrompt(){
+    //     System.out.print(PROMPT);
+    // }
 }

@@ -10,6 +10,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -37,18 +38,23 @@ public class Table {
 
         /**
          * Check if the passed in string matches the type of this column.
-         * @param t Type passed in as String.
-         * @return True if 
+         * @param t Type passed in as String
+         * @param allowSpecialValue True when special value "NaN" and "NOVALUE" are allowed
+         * @return True if passed in string is compatible with column type
          */
-        public boolean checkType(String t) {
+        public boolean checkType(String t, boolean allowSpecialValue) {
             String result = Parser.parseType(t);
             if (result == null) {
                 return false;
             }
-            if (result.equals("all")) {
-                return true;
+            if (result.equals("NOVALUE")) {
+                if (allowSpecialValue == true)
+                    return true;
+                return false;
             }
-            if (result.equals("number")) {
+            if (result.equals("NaN")) {
+                if (allowSpecialValue == false)
+                    return false;
                 if (type.equals("string")) {
                     return false;
                 }
@@ -121,8 +127,8 @@ public class Table {
     *        at index 0 and its type is at index 1, and so on.
     */
     public Table(List<String> colInfo) {
-    	this.cols = new HashMap<String, Column>();
-    	colNameSeq = new LinkedList<String>();
+        this.cols = new HashMap<String, Column>();
+        colNameSeq = new LinkedList<String>();
         Iterator<String> iterator = colInfo.iterator();
         while (iterator.hasNext()) {
             String name = iterator.next();
@@ -225,13 +231,25 @@ public class Table {
 
     /**
      * Return the String representation of row i.
-     * @param i Index of row.
-     * @return String representation of this row.
+     * @param i Index of row
+     * @param round If round is true, float numbers will be specified to 3 decimal places
+     * @return String representation of this row
      */
-    public String getRow(int i) {
+    public String getRow(int i, boolean round) {
         StringJoiner jointer = new StringJoiner(",");
+        DecimalFormat df = new DecimalFormat("#.000");
         for (String s : colNameSeq) {
-            jointer.add(getItem(s, i));
+            String item = getItem(s, i);
+            if (round == true) {
+                if (getType(s).equals("float")) {
+                    if (!"NaN".equals(item) && !"NOVALUE".equals(item)) {
+                        double d = Double.parseDouble(item);
+                        item = df.format(d);
+                    }
+
+                }
+            }
+            jointer.add(item);
         }
         return jointer.toString();
     }
@@ -241,11 +259,11 @@ public class Table {
      * @param row Row expression passed to this method.
      * @return True if and only if row expression matches the types of this table.
      */
-    public boolean checkRowType(String[] row) {
+    public boolean checkRowType(String[] row, boolean allowSpecialValue) {
         if (row.length == colNum()) {
             for (int i = 0; i < row.length; i++) {
                 Column col = getColumn(i);
-                if (!col.checkType(row[i])) {
+                if (!col.checkType(row[i], allowSpecialValue)) {
                     return false;
                 }
             }
@@ -260,8 +278,8 @@ public class Table {
      * @param row Row expression passed in.
      * @return True on success.
      */
-    public boolean insertRow(String[] row) {
-        if (!checkRowType(row)) {
+    public boolean insertRow(String[] row, boolean allowSpecialValue) {
+        if (!checkRowType(row, allowSpecialValue)) {
             return false;
         }
         for (int i = 0; i < colNum(); i++) {
@@ -271,9 +289,17 @@ public class Table {
     }
 
     /**
-     * Return the String representation of this table.
+     * Return the String representation of this table. Float numbers will be specified to 3 decimal places.
      */
     public String toString() {
+        return this.toString(true);
+    }
+
+    /**
+     * Return the String representation of this table.
+     * @param round If round is true, float numbers will be specified to 3 decimal places
+     */
+    public String toString(boolean round) {
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < colNum(); i++) {
             Column col = getColumn(i);
@@ -287,7 +313,7 @@ public class Table {
         StringJoiner jointer = new StringJoiner("\r\n");
         jointer.add(builder.toString());
         for (int i = 0; i < rowNum(); i++) {
-            jointer.add(getRow(i));
+            jointer.add(getRow(i, round));
         }
         return jointer.toString();
     }

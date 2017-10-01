@@ -28,7 +28,7 @@ public class Join {
                     newRow[j] = t2.getItem(iterator.next(), rowId);
                     j++;
                 }
-                joinedTb.insertRow(newRow);
+                joinedTb.insertRow(newRow, true);
             }
         }
         return joinedTb;

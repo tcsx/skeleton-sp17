@@ -20,10 +20,10 @@ public class Main {
             }
 
             if (!line.trim().isEmpty()) {
-                String result = db.transact(line);
-                if (result.length() > 0) {
-                    System.out.println(result);
-                }
+                Database.transact(line, db);
+                // if (result.length() > 0) {
+                //     System.out.println(result);
+                // }
             }
             System.out.print(PROMPT);
         }
