@@ -4,7 +4,22 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-public class Join {
+public class Select {
+    public static Table select(String[] exprs, String[] conds, Table tbs){
+
+    }
+
+    public static Table rows(String[] conds, Table tb) {
+
+    }
+
+    public static Table cols(String[] exprs, Table tb){
+
+    }
+
+    public static boolean match(String[] conds, Table tb){
+
+    }
 
     /**
     * @return The result of joining t1 and t2.
@@ -44,5 +59,6 @@ public class Join {
         }
         return result;
     }
+
 
 }

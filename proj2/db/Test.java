@@ -8,9 +8,10 @@ import java.util.regex.Matcher;
 
 public class Test{
     public static void main(String[] args) {
-        Pattern p = Pattern.compile("[+\\-*/]");
-        String s = "*";
+        Pattern p = Pattern.compile("w(e)?");
+        String s = "w";
         Matcher m = p.matcher(s);
+        String t = m.group(1);
         System.out.println(m.matches());
         double a = 4.5;
         double b = 5.5;

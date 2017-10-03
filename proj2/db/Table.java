@@ -184,6 +184,9 @@ public class Table {
         return this.getColumn(colName).get(i);
     }
 
+    public void addCol(String name, Column col) {
+        cols.put(name, col);
+    }
     // /**
     //  * Get item by column index and row index.
     //  * @param colName Column index.

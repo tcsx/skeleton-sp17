@@ -78,7 +78,7 @@ public class Database {
                 }
                 tables.put(name, table);
             } catch (Exception e) {
-                System.err.printf("ERROR: PARSE FILE %s FAILED. INCORRECT TABLE FORMAT.\r\n", name);
+                System.err.println("ERROR: PARSE FILE %s FAILED." + e.toString());
                 return;
             } finally {
                 try {

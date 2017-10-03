@@ -18,7 +18,8 @@ public class Parser {
             NAMES = Pattern.compile("[a-zA-Z]+\\w*"),
             STRING = Pattern.compile("'[^\\r\\n\\t',]*'"), FLOAT = Pattern.compile("[\\+\\-]?\\d*\\.\\d*"),
             INT = Pattern.compile("\\d+"),
-            COLEXPR = Pattern.compile("[a-zA-Z]+\\w*\\s*([+\\-*/]\\s+\\S+\\s+as\\s+[a-zA-Z]+\\w*)?");
+            COLEXPR = Pattern.compile("([a-zA-Z]+\\w*)\\s*([+\\-*/])\\s+(\\S+)\\s+as\\s+([a-zA-Z]+\\w*)");
+
     // Stage 2 syntax, contains the clauses of commands.
     public static final Pattern CREATE_NEW = Pattern
             .compile("([a-zA-Z]+\\w*)\\s+\\(\\s*([a-zA-Z]+\\w*\\s+(?:string|int|float)\\s*" + "(?:,\\s*[a-zA-Z]+\\w*\\s+(?:string|int|float)\\s*)*)\\)"),
@@ -95,7 +96,10 @@ public class Parser {
     }
 
     private static void createSelectedTable(String name, String exprs, String tables, String conds, Database db) {
-        db.addTable(name, select(exprs, tables, conds, db));
+        Table tb = select(exprs, tables, conds, db);
+        if(tb == null)
+            return;
+        db.addTable(name, tb);
     }
 
     private static void loadTable(String name, Database db) {
@@ -132,16 +136,29 @@ public class Parser {
             return;
         }
         Table tb = select(m.group(1), m.group(2), m.group(3), db);
+        if(tb == null)
+            return;
         System.out.println(tb);
     }
 
-    private static Table select(String exprs, String tables, String conds, Database db) {
+    private static Table select(String colExprs, String tables, String conditions, Database db) {
+        String [] exprs = colExprs.split(COMMA);
+        String [] tbs = tables.split(COMMA);
+        for (String tb : tbs) {
+            if (!db.tables.containsKey(tb)) {
+                Database.printNotExist(tb);
+                return null;
+            }
+        }
+        String [] conds = conditions.split(COMMA);
+
         System.out.printf(
                 "You are trying to select these expressions:"
                         + " '%s' from the join of these tables: '%s', filtered by these conditions: '%s'\n",
                 exprs, tables, conds);
                 return null;
     }
+    
 
     /**
      * Parse the column information expression containing column names and types.
@@ -157,13 +174,13 @@ public class Parser {
         for (int i = 0; i < colInfo.length; i += 2) {
             if ((m = COLHEAD.matcher(colHead[i / 2])).matches()) {
                 String name = m.group(1);
-                if (colNames.put(name, 1) != null) { //If there are duplicate column names.
-                    throw new IllegalArgumentException();
+                if (colNames.containsKey(name)) {//If there are duplicate column names.
+                    throw new IllegalArgumentException("DUPLICATE COLUMNS.");
                 }
                 colInfo[i] = name;
                 colInfo[i + 1] = m.group(2);
             } else {
-                throw new IllegalArgumentException();
+                throw new IllegalArgumentException("INCORRECT COLUMN HEADS.");
             }
         }
         return colInfo;
@@ -178,7 +195,7 @@ public class Parser {
                 r = r.trim();
             }
         } else {
-            throw new IllegalArgumentException("ERROR: ILLEGAL ROW EXPRESSION.");
+            throw new IllegalArgumentException("ILLEGAL ROW EXPRESSION.");
         }
         return row;
     }
