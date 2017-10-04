@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 public class Database {
-    Map<String, Table> tables;
+   private Map<String, Table> tables;
 
     public Database() {
         tables = new HashMap<String, Table>();
@@ -25,6 +25,10 @@ public class Database {
 
     public void addTable(String name, Table tb){
         tables.put(name, tb);
+    }
+    
+    public Map<String, Table> getTables(){
+        return tables;
     }
     
     /**

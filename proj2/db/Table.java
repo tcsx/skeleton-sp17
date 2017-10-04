@@ -138,6 +138,11 @@ public class Table {
         }
     }
 
+    public Table(){
+        cols = new HashMap<String, Column>();
+        colNameSeq = new LinkedList<String>();
+    }
+
     public List<String> getColNameSeq() {
         return colNameSeq;
     }
@@ -167,6 +172,10 @@ public class Table {
         return cols.get(colNameSeq.get(i));
     }
 
+    public HashMap<String, Column> getCols(){
+        return cols;
+    }
+    
     /**
      * Get the name of a column by its index.
      */
@@ -186,6 +195,7 @@ public class Table {
 
     public void addCol(String name, Column col) {
         cols.put(name, col);
+        colNameSeq.add(name);
     }
     // /**
     //  * Get item by column index and row index.

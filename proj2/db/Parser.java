@@ -15,14 +15,14 @@ public class Parser {
             PRINT_CMD = Pattern.compile("print " + REST), SELECT_CMD = Pattern.compile("select " + REST),
             COLHEAD = Pattern.compile("\\s*([a-zA-Z]+\\w*)\\s+(string|int|float)\\s*"),
             ROW = Pattern.compile("\\s*([^\\r\\n\\t,]+)\\s*(?:,\\s*[^\\r\\n\\t,]+\\s*)*"),
-            NAMES = Pattern.compile("[a-zA-Z]+\\w*"),
-            STRING = Pattern.compile("'[^\\r\\n\\t',]*'"), FLOAT = Pattern.compile("[\\+\\-]?\\d*\\.\\d*"),
-            INT = Pattern.compile("\\d+"),
-            COLEXPR = Pattern.compile("([a-zA-Z]+\\w*)\\s*([+\\-*/])\\s+(\\S+)\\s+as\\s+([a-zA-Z]+\\w*)");
+            NAMES = Pattern.compile("[a-zA-Z]+\\w*"), STRING = Pattern.compile("'[^\\r\\n\\t',]*'"),
+            FLOAT = Pattern.compile("[\\+\\-]?\\d*\\.\\d*"), INT = Pattern.compile("\\d+"),
+            COLEXPR = Pattern.compile("(\\S+)\\s*([+\\-*/])\\s+(\\S+)\\s+as\\s+([a-zA-Z]+\\w*)");
 
     // Stage 2 syntax, contains the clauses of commands.
     public static final Pattern CREATE_NEW = Pattern
-            .compile("([a-zA-Z]+\\w*)\\s+\\(\\s*([a-zA-Z]+\\w*\\s+(?:string|int|float)\\s*" + "(?:,\\s*[a-zA-Z]+\\w*\\s+(?:string|int|float)\\s*)*)\\)"),
+            .compile("([a-zA-Z]+\\w*)\\s+\\(\\s*([a-zA-Z]+\\w*\\s+(?:string|int|float)\\s*"
+                    + "(?:,\\s*[a-zA-Z]+\\w*\\s+(?:string|int|float)\\s*)*)\\)"),
             SELECT_CLS = Pattern
                     .compile("([^,]+?(?:,[^,]+?)*)\\s+from\\s+" + "(\\S+\\s*(?:,\\s*\\S+\\s*)*)(?:\\s+where\\s+"
                             + "([\\w\\s+\\-*/'<>=!.]+?(?:\\s+and\\s+" + "[\\w\\s+\\-*/'<>=!.]+?)*))?"),
@@ -59,7 +59,7 @@ public class Parser {
         } else if ((m = SELECT_CMD.matcher(query)).matches()) {
             select(m.group(1), db);
         } else {
-            System.err.printf("ERROR: MALFORMED QUERY: %s\n", query);
+            System.err.printf("ERROR: MALFORMED QUERY: %s\r\n", query);
         }
     }
 
@@ -74,7 +74,7 @@ public class Parser {
         } else if ((m = CREATE_SEL.matcher(expr)).matches()) {
             createSelectedTable(m.group(1), m.group(2), m.group(3), m.group(4), db);
         } else {
-            System.err.printf("ERROR: MALFORMED CREATE: %s\n", expr);
+            System.err.printf("ERROR: MALFORMED CREATE: %s\r\n", expr);
         }
     }
 
@@ -97,7 +97,7 @@ public class Parser {
 
     private static void createSelectedTable(String name, String exprs, String tables, String conds, Database db) {
         Table tb = select(exprs, tables, conds, db);
-        if(tb == null)
+        if (tb == null)
             return;
         db.addTable(name, tb);
     }
@@ -117,7 +117,7 @@ public class Parser {
     private static void insertRow(String expr, Database db) {
         Matcher m = INSERT_CLS.matcher(expr);
         if (!m.matches()) {
-            System.err.printf("ERROR: MALFORMED INSERT: %s\n", expr);
+            System.err.printf("ERROR: MALFORMED INSERT: %s\r\n", expr);
             return;
         }
         String name = m.group(1);
@@ -132,33 +132,32 @@ public class Parser {
     private static void select(String expr, Database db) {
         Matcher m = SELECT_CLS.matcher(expr);
         if (!m.matches()) {
-            System.err.printf("ERROR: MALFORMED SELECT: %s\n", expr);
+            System.err.printf("ERROR: MALFORMED SELECT: %s\r\n", expr);
             return;
         }
         Table tb = select(m.group(1), m.group(2), m.group(3), db);
-        if(tb == null)
+        if (tb == null)
             return;
         System.out.println(tb);
     }
 
     private static Table select(String colExprs, String tables, String conditions, Database db) {
-        String [] exprs = colExprs.split(COMMA);
-        String [] tbs = tables.split(COMMA);
-        for (String tb : tbs) {
-            if (!db.tables.containsKey(tb)) {
+        String[] tbStrings = tables.split(COMMA);
+        Table[] tbs = new Table[tbStrings.length];
+
+        for (int i = 0; i < tbs.length; i++) {
+            String tb = tbStrings[i];
+            if (!db.getTables().containsKey(tb)) {
                 Database.printNotExist(tb);
                 return null;
             }
+            tbs[i] = db.getTables().get(tb);
         }
-        String [] conds = conditions.split(COMMA);
-
-        System.out.printf(
-                "You are trying to select these expressions:"
-                        + " '%s' from the join of these tables: '%s', filtered by these conditions: '%s'\n",
-                exprs, tables, conds);
-                return null;
+        
+        String[] exprs = colExprs.split(COMMA,8);
+        String[] conds = conditions.split(COMMA);
+        return Select.select(exprs, conds, tbs);
     }
-    
 
     /**
      * Parse the column information expression containing column names and types.

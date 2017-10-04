@@ -1,24 +1,54 @@
 package db;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.regex.Matcher;
 
 public class Select {
-    public static Table select(String[] exprs, String[] conds, Table tbs){
-
+    public static Table select(String[] exprs, String[] conds, Table[] tbs) {
+        Table tb = join(tbs);
+        if (exprs.length != 1 || !"*".equals(exprs[0])){
+            tb = colFilter(exprs, tb);
+        }
+        // tb = rowFilter(conds, tb);
+        return tb;
     }
 
-    public static Table rows(String[] conds, Table tb) {
+    // public static Table rowFilter(String[] conds, Table tb) {
 
-    }
+    // }
 
-    public static Table cols(String[] exprs, Table tb){
+    // public static boolean matches(String[] conds, Table tb) {
 
-    }
+    // }
 
-    public static boolean match(String[] conds, Table tb){
+    public static Table colFilter(String[] exprs, Table tb) {
+        Table newTable = new Table();
+        Matcher m;
+        for (String expr : exprs) {
+            HashMap<String, Table.Column> cols = tb.getCols();
+            if (Parser.NAMES.matcher(expr).matches()) {
+                if (cols.containsKey(expr))
+                    newTable.addCol(expr, tb.getColumn(expr));
+                else{
+                    printColNotExist(expr);
+                    return null;
+                }
+            }else if ((m = Parser.COLEXPR.matcher(expr)).matches()){
+                Table.Column col = Operation.operation(m.group(1),m.group(2),m.group(3),m.group(4),tb);
+                if (col == null) {
+                    return null;
+                }
+                newTable.addCol(m.group(4), col);
+            }else{
+                System.err.println("ERROR: WRONG COLUMN EXPRESSION: " + expr);
+                return null;
+            }
 
+        }
+        return newTable;
     }
 
     /**
@@ -50,15 +80,18 @@ public class Select {
     }
 
     public static Table join(Table[] tables) {
-        if(tables.length == 1) {
+        if (tables.length == 1) {
             return tables[0];
         }
         Table result = tables[0];
-        for(int i = 1; i < tables.length; i++) {
+        for (int i = 1; i < tables.length; i++) {
             result = join(result, tables[i]);
         }
         return result;
     }
 
+    public static void printColNotExist(String col) {
+        System.err.println("ERROR: COLUMN " + col + " DOES NOT EXIST.");
+    }
 
 }

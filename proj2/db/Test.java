@@ -10,18 +10,19 @@ public class Test{
     public static void main(String[] args) {
         Pattern p = Pattern.compile("w(e)?");
         String s = "w";
+        String ss[] = s.split(",");
         Matcher m = p.matcher(s);
-        String t = m.group(1);
-        System.out.println(m.matches());
-        double a = 4.5;
-        double b = 5.5;
-        int c = 6;
-        double d = 8.0;
-        double e = 6.9;
-        Integer f = 0;
-        Double g = 0.0;
-        System.out.println(Integer.valueOf("0000"));
-        System.out.println(Double.parseDouble("000.0000"));
+        Table tb = new Table();
+        Table.Column col = tb.new Column("int");
+        col.add("8");
+        col.add("8");
+        col.add("8");
+        Table tb1 = new Table();
+        tb1.addCol("he", col);
+        tb = null;
+        for (String item : col) {
+            System.out.println(item);
+        }
         
     }
 
