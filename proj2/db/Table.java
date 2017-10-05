@@ -1,15 +1,5 @@
 package db;
 
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.InputStreamReader;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,7 +16,8 @@ public class Table {
     * Column in a Table. Contains type and data of columns.
     */
     public class Column extends ArrayList<String> {
-        private String type;
+		private static final long serialVersionUID = -4837083264856072491L;
+		private String type;
 
         /**
          * Construct a column with its name and type.
@@ -69,19 +60,6 @@ public class Table {
 
         public String getType() {
             return type;
-        }
-
-        /**
-         * @return The indexes of rows whose value is s.
-         */
-        public List<Integer> indexesOf(String s) {
-            LinkedList<Integer> ids = new LinkedList<Integer>();
-            for (int i = 0; i < size(); i++) {
-                if (get(i).equals(s)) {
-                    ids.add(i);
-                }
-            }
-            return ids;
         }
 
     }
