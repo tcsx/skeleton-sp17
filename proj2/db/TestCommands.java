@@ -174,7 +174,7 @@ public static final String STRING = "string";
 	// }
 
 	public static void testColFlt(){
-		String[] exprs = {};
+		String[] exprs = {""};
 		String[] conds;
 		Table[] tbs;
 	}

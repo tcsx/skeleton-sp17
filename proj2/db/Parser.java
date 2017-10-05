@@ -5,6 +5,9 @@ import java.util.regex.Matcher;
 import java.util.HashMap;
 import java.util.StringJoiner;
 
+/**
+ * This class contains essential methods and fields for parsing the commands that the users pass in. 
+ */
 public class Parser {
     // Various common constructs, simplifies parsing.
     private static final String REST = "\\s*(.*?)\\s*", COMMA = "\\s*,\\s*", AND = "\\s+and\\s+", WHITESPACE = "\\s+";
@@ -17,7 +20,9 @@ public class Parser {
             ROW = Pattern.compile("\\s*([^\\r\\n\\t,]+)\\s*(?:,\\s*[^\\r\\n\\t,]+\\s*)*"),
             NAMES = Pattern.compile("[a-zA-Z]+\\w*"), STRING = Pattern.compile("'[^\\r\\n\\t',]*'"),
             FLOAT = Pattern.compile("[\\+\\-]?\\d*\\.\\d*"), INT = Pattern.compile("\\d+"),
-            COLEXPR = Pattern.compile("(\\S+)\\s*([+\\-*/])\\s+(\\S+)\\s+as\\s+([a-zA-Z]+\\w*)");
+            COLEXPR = Pattern.compile("(\\S+)\\s*([+\\-*/])\\s*([^,]+?)\\s+as\\s+([a-zA-Z]+\\w*)"),
+            CONDS = Pattern.compile("(\\S+)\\s*((?:<=)|(?:>=)|<|>|(?:==)|(?:!=))\\s*([^,]+)");
+            
 
     // Stage 2 syntax, contains the clauses of commands.
     public static final Pattern CREATE_NEW = Pattern
@@ -39,8 +44,11 @@ public class Parser {
     // }
 
     /**
-     * Parse the type of the query and pass the sentence of the query to 
+     * Parse the type of the command and pass the sentence of the query to 
      * corresponding parse function. 
+     * 
+     * @param query Command
+     * @param db The database that the command is applied to
      */
     public static void eval(String query, Database db) {
         Matcher m;
@@ -66,6 +74,8 @@ public class Parser {
     /**
      * Parse table name, its column information (name and type) and select 
      * clause and pass them to the next parse function.
+     * @param expr Expression for creating a table
+     * @param db The database that the command is applied to
      */
     private static void createTable(String expr, Database db) {
         Matcher m;
@@ -78,6 +88,13 @@ public class Parser {
         }
     }
 
+
+    /**
+     * Create a new table.
+     * @param name Name of the new table
+     * @param cols An array of string. Each item contains the name and type of a column.
+     * @param db The database where the new table will be
+     */
     private static void createNewTable(String name, String[] cols, Database db) {
         String[] colInfo = new String[cols.length * 2];
         for (int i = 0; i < colInfo.length; i += 2) {
@@ -155,7 +172,9 @@ public class Parser {
         }
         
         String[] exprs = colExprs.split(COMMA,8);
-        String[] conds = conditions.split(COMMA);
+        if(conditions == null)
+            return Select.select(exprs,null,tbs);
+        String[] conds = conditions.split(AND);
         return Select.select(exprs, conds, tbs);
     }
 
@@ -164,6 +183,7 @@ public class Parser {
      * @param expr Column information expression containing column names and types
      * @return An array of its column names and types. The name of first column is  
      *         at index 0 and its type is at index 1, and so on.
+     * @throws IllegalArgumentException if the column information expression is incorrect
      */
     public static String[] parseColInfo(String expr) throws IllegalArgumentException {
         String[] colHead = expr.split(COMMA);

@@ -90,21 +90,6 @@ public class Table {
     private List<String> colNameSeq; //Record the sequence of column names
     public static final String TBL = ".tbl";
 
-    // /**
-    //  * Constructs a Table with its name and columns
-    //  * @param name Name of this table.
-    //  * @param cols  Its columns.
-    //  */
-    // public Table(String name, Column[] cols) {
-    //     this.name = name;
-    //     this.cols = new HashMap<String, Column>();
-    //     colNameSeq = new LinkedList<String>();
-    //     for (Column col : cols) {
-    //         this.cols.put(col.colName, col);
-    //         colNameSeq.add(col.colName);
-    //     }
-    // }
-
     /**
      * Constructs a Table with its column infornation.
      * @param colInfo 
@@ -138,7 +123,19 @@ public class Table {
         }
     }
 
-    public Table(){
+    /**
+     * Construct a table whose column names and their types are the same as another table.
+     * @param tb Another table
+     */
+    public Table(Table tb) {
+        colNameSeq = tb.getColNameSeq();
+        cols = new HashMap<String, Column>();
+        for (String name : colNameSeq) {
+            cols.put(name, new Column(tb.getType(name)));
+        }
+    }
+
+    public Table() {
         cols = new HashMap<String, Column>();
         colNameSeq = new LinkedList<String>();
     }
@@ -172,10 +169,10 @@ public class Table {
         return cols.get(colNameSeq.get(i));
     }
 
-    public HashMap<String, Column> getCols(){
+    public HashMap<String, Column> getCols() {
         return cols;
     }
-    
+
     /**
      * Get the name of a column by its index.
      */
@@ -193,32 +190,16 @@ public class Table {
         return this.getColumn(colName).get(i);
     }
 
+    /**
+     * Add a column into a table
+     * @param name Name of the column
+     * @param col Column to be added
+     */
     public void addCol(String name, Column col) {
         cols.put(name, col);
         colNameSeq.add(name);
     }
-    // /**
-    //  * Get item by column index and row index.
-    //  * @param colName Column index.
-    //  * @param i Row index.
-    //  * @return The specified item.
-    //  */
-    // public String getItem(int col, int row) {
-    //     return getColumn(col).get(row);
-    // }
 
-    // /**
-    //  * @param colName Column name passed to this method.
-    //  * @return If this column exists, return its index, otherwise return -1;
-    //  */
-    // public int indexOf(String colName) {
-    //     for(int i = 0; i < colNum(); i++) {
-    //         if (getColumn(i).colName.equals(colName)) {
-    //             return i;
-    //         }
-    //     }
-    //     return -1;
-    // }
     /**
      * Check if this table contains certain column by checking column name
      * @param name Column name needs to be checked
@@ -265,6 +246,20 @@ public class Table {
             jointer.add(item);
         }
         return jointer.toString();
+    }
+
+    /**
+     * Get items in row i in an string array.
+     * @param i Index of row.
+     * @return An array of row items.
+     */
+    public String[] getRow(int i) {
+        String[] row = new String[this.colNum()];
+        int j = 0;
+        for (String s : colNameSeq) {
+            row[j++] = getItem(s, i);
+        }
+        return row;
     }
 
     /**
@@ -396,8 +391,4 @@ public class Table {
         }
         return rows;
     }
-    // public Table join(Table tb) {
-    //     ArrayList<Integer> common = commonCols(tb);
-
-    // }
 }

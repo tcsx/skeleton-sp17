@@ -10,6 +10,11 @@ public class Operation {
     public static final String FLOAT = "float";
     public static final String STRING = "string";
 
+    /**
+     * Convert a int literal to float literal by add .0 to its tail
+     * @param s Int literal
+     * @return float literal
+     */
     private static String intToFloat(String s) {
         return s + ".0";
     }
@@ -98,6 +103,14 @@ public class Operation {
         return String.valueOf(d1.divide(d2, 3, BigDecimal.ROUND_HALF_UP).doubleValue());
     }
 
+    /**
+     * @param op1 First operand of the column expression
+     * @param oprtr Operator of the column expression
+     * @param op2 Second operand of the column expression
+     * @param alias The name of the result column
+     * @param tb The table to which the column expression is applied
+     * @return The result column of the column expression
+     */
     public static Table.Column operation(String op1, String oprtr, String op2, String alias, Table tb) {
         HashMap<String, Table.Column> cols = tb.getCols();
         Table.Column newCol = null;
@@ -141,6 +154,13 @@ public class Operation {
         return newCol;
     }
 
+    /**
+     * Takes in two columns and an operator. Applies the operator to the items in the two columns and add the result to a new column.
+     * @param col1 First column
+     * @param col2 Second column
+     * @param oprtr Operator
+     * @newCol The result of applying operator to the two columns
+     */
     public static void operation(Table.Column col1, Table.Column col2, String oprtr, Table.Column newCol) {
         String type1 = col1.getType();
         String type2 = col2.getType();
@@ -149,6 +169,15 @@ public class Operation {
         }
     }
 
+    /**
+     * Take in two literals and an operator and returns the result literal.
+     * @param s1 First literal
+     * @param type1 Type of the first literal
+     * @param s2 Second literal
+     * @param type2 Type of the second literal
+     * @param oprtr Operator
+     * @return The result literal
+     */
     public static String operation(String s1, String type1, String s2, String type2, String oprtr) {
         if ("+".equals(oprtr)) {
             return add(s1, type1, s2, type2);
@@ -162,6 +191,12 @@ public class Operation {
         return divide(s1, type1, s2, type2);
     }
 
+    /**
+     * Check if two types are compatible for operation.
+     * @param t1 First type
+     * @param t2 Second type
+     * @return The type of the result of the operation with operands of type t1 and t2 or null if their types mismatch.
+     */
     public static String typesMatch(String t1, String t2) {
         if (STRING.equals(t1)) {
             if (!STRING.equals(t2)) {

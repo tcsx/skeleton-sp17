@@ -12,17 +12,17 @@ public class Test{
         String s = "w";
         String ss[] = s.split(",");
         Matcher m = p.matcher(s);
+        System.out.println(m.matches());
         Table tb = new Table();
-        Table.Column col = tb.new Column("int");
-        col.add("8");
-        col.add("8");
-        col.add("8");
-        Table tb1 = new Table();
-        tb1.addCol("he", col);
-        tb = null;
-        for (String item : col) {
-            System.out.println(item);
-        }
+        System.out.println(9.1 - 9);
+        System.out.println(9.111- 9.111);
+        System.out.println(9.111- 9.1101);
+        System.out.println(9.111- 9.112);
+        System.out.println("1.9".compareTo("2"));
+        System.out.println("1.9".compareTo("2.1"));
+        System.out.println("-1.2".compareTo("2"));
+        System.out.println("-1".compareTo("1"));
+        System.out.println("-1".compareTo("-2"));
         
     }
 

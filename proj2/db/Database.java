@@ -17,20 +17,25 @@ import java.util.List;
 import java.util.Map;
 
 public class Database {
-   private Map<String, Table> tables;
+    private Map<String, Table> tables;
 
     public Database() {
         tables = new HashMap<String, Table>();
     }
 
-    public void addTable(String name, Table tb){
-        tables.put(name, tb);
-    }
-    
-    public Map<String, Table> getTables(){
+    public Map<String, Table> getTables() {
         return tables;
     }
-    
+
+    /**
+     * Add a table into the database.
+     * @param name Name of the table
+     * @param tb Table to be added
+     */
+    public void addTable(String name, Table tb) {
+        tables.put(name, tb);
+    }
+
     /**
      * Create and add a table to the database.
      * @param name
@@ -67,6 +72,10 @@ public class Database {
         return tables.get(name);
     }
 
+    /**
+     * Load certain table from a tbl file to the database
+     * @param name Name of the table
+     */
     public void loadTable(String name) {
         try {
             BufferedReader in = new BufferedReader(new FileReader(name + Table.TBL));
@@ -96,11 +105,16 @@ public class Database {
         }
     }
 
+    /**
+     * Insert a row into a table.
+     * @param name The name of the table
+     * @param row The row to be inserted
+     */
     public void insertRowInto(String name, String[] row) {
-    	if (!tables.containsKey(name)) {
-			printNotExist(name);
-			return;
-		}
+        if (!tables.containsKey(name)) {
+            printNotExist(name);
+            return;
+        }
         getTable(name).insertRow(row, false);
     }
 
@@ -153,6 +167,10 @@ public class Database {
         }
     }
 
+    /**
+    * Drop certain table from the database.
+    * @param name Table name.
+    */
     public void dropTable(String name) {
         if (!tables.containsKey(name)) {
             printNotExist(name);
@@ -161,17 +179,10 @@ public class Database {
         tables.remove(name);
     }
 
-
-
-    // public Table selectTable(String colExpr[], String table[], String cond[]){
-
-    // }
-
-        /**
-     * Transact function of the database
-     * @param query Command passed to this function
-     * @return String message as a result of the executed command
-     */
+    /**
+    * Transact function of the database
+    * @param query Command passed to this function
+    */
     public static void transact(String query, Database db) {
         Parser.eval(query, db);
     }

@@ -19,12 +19,12 @@ public class Main {
         System.out.print(PROMPT);
 
         String line = "";
-        while ((line = in.readLine()) != null) {
+        while ((line = in.readLine().trim()) != null) {
             if (EXIT.equals(line)) {
                 break;
             }
 
-            if (!line.trim().isEmpty()) {
+            if (!line.isEmpty()) {
                 Database.transact(line, db);
             }
             System.out.print(PROMPT);
