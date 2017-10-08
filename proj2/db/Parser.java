@@ -5,7 +5,7 @@ import java.util.regex.Matcher;
 import java.util.HashMap;
 
 /**
- * This class contains essential methods and fields for parsing the commands that the users pass in. 
+ * This class contains essential methods and fields for parsing the commands that the users pass in. Its framework is provided by CS61B and has been modified and added other parsing methods and fields to help the functioning of the database project.
  */
 public class Parser {
     // Various common constructs, simplifies parsing.
