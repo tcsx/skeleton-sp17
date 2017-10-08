@@ -52,7 +52,6 @@ public class Table {
                 return true;
             }
             if (!type.equals(result)) {
-                System.err.printf("ERROR: ITEM %s DOES NOT MATCH COLUMN TYPE %s.\r\n", t, type);
                 return false;
             }
             return true;
@@ -245,18 +244,17 @@ public class Table {
      * @param row Row expression passed to this method.
      * @return True if and only if row expression matches the types of this table.
      */
-    public boolean checkRowType(String[] row, boolean allowSpecialValue) {
+    public void checkRowType(String[] row, boolean allowSpecialValue) throws IllegalArgumentException {
         if (row.length == colNum()) {
             for (int i = 0; i < row.length; i++) {
                 Column col = getColumn(i);
                 if (!col.checkType(row[i], allowSpecialValue)) {
-                    return false;
+                    throw new IllegalArgumentException(String.format("ERROR: DATA %s DOES NOT MATCH COLUMN TYPE.", row[i]));
                 }
             }
-            return true;
+        }else{
+            throw new IllegalArgumentException("ERROR: THE LENGTH OF ROW DOES NOT MATCH THE NUMBER OF COLUMNS. ");
         }
-        System.err.println("ERROR: THE SIZE OF ROW DOES NOT MATCH THIS TABLE.");
-        return false;
     }
 
     /**
@@ -264,14 +262,11 @@ public class Table {
      * @param row Row expression passed in.
      * @return True on success.
      */
-    public boolean insertRow(String[] row, boolean allowSpecialValue) {
-        if (!checkRowType(row, allowSpecialValue)) {
-            return false;
-        }
+    public void insertRow(String[] row, boolean allowSpecialValue) throws IllegalArgumentException{
+        checkRowType(row, allowSpecialValue);
         for (int i = 0; i < colNum(); i++) {
             getColumn(i).add(row[i]);
         }
-        return true;
     }
 
     /**
@@ -322,7 +317,7 @@ public class Table {
 
     /**
     *@param tb Another table to be joined with this table.  
-    *@return ColInfo after joining two tables.
+    *@return Column information after joining two tables.
     */
     public List<String> joinColInfo(Table tb) {
         List<String> common = this.commonCols(tb);

@@ -10,7 +10,7 @@ import db.Database;
  * Contains main method for this project. This class is provided by CS61B.
  */
 public class Main {
-    private static final String EXIT   = "exit";
+    private static final String EXIT = "exit";
     public static final String PROMPT = "> ";
 
     public static void main(String[] args) throws IOException {
@@ -25,15 +25,14 @@ public class Main {
             }
 
             if (!line.isEmpty()) {
-                Database.transact(line, db);
+                String result = db.transact(line);
+                if (result.length() > 0) {
+                    System.out.println(result);
+                }
             }
             System.out.print(PROMPT);
         }
 
         in.close();
     }
-
-    // public static void printPrompt(){
-    //     System.out.print(PROMPT);
-    // }
 }

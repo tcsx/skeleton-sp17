@@ -16,7 +16,7 @@ public class Parser {
             DROP_CMD = Pattern.compile("drop table " + REST), INSERT_CMD = Pattern.compile("insert into " + REST),
             PRINT_CMD = Pattern.compile("print " + REST), SELECT_CMD = Pattern.compile("select " + REST),
             COLHEAD = Pattern.compile("\\s*([a-zA-Z]+\\w*)\\s+(string|int|float)\\s*"),
-            ROW = Pattern.compile("\\s*([^\\r\\n\\t,]+)\\s*(?:,\\s*[^\\r\\n\\t,]+\\s*)*"),
+            ROW = Pattern.compile("\\s*([^\\r\\n\\t,]+)\\s*(?:,\\s*[\\d']+[^\\r\\n\\t,]*\\s*)*"),
             NAMES = Pattern.compile("[a-zA-Z]+\\w*"), STRING = Pattern.compile("'[^\\r\\n\\t',]*'"),
             FLOAT = Pattern.compile("[\\+\\-]?\\d*\\.\\d*"), INT = Pattern.compile("\\d+"),
             COLEXPR = Pattern.compile("(\\S+)\\s*([+\\-*/])\\s*([^,]+?)\\s+as\\s+([a-zA-Z]+\\w*)"),
@@ -48,24 +48,28 @@ public class Parser {
      * @param query Command
      * @param db The database that the command is applied to
      */
-    public static void eval(String query, Database db) {
+    public static String eval(String query, Database db) {
         Matcher m;
-        if ((m = CREATE_CMD.matcher(query)).matches()) {
-            createTable(m.group(1), db);
-        } else if ((m = LOAD_CMD.matcher(query)).matches()) {
-            loadTable(m.group(1), db);
-        } else if ((m = STORE_CMD.matcher(query)).matches()) {
-            storeTable(m.group(1), db);
-        } else if ((m = DROP_CMD.matcher(query)).matches()) {
-            dropTable(m.group(1), db);
-        } else if ((m = INSERT_CMD.matcher(query)).matches()) {
-            insertRow(m.group(1), db);
-        } else if ((m = PRINT_CMD.matcher(query)).matches()) {
-            printTable(m.group(1), db);
-        } else if ((m = SELECT_CMD.matcher(query)).matches()) {
-            select(m.group(1), db);
-        } else {
-            System.err.printf("ERROR: MALFORMED QUERY: %s\r\n", query);
+        try{
+            if ((m = CREATE_CMD.matcher(query)).matches()) {
+                return createTable(m.group(1), db);
+            } else if ((m = LOAD_CMD.matcher(query)).matches()) {
+                return loadTable(m.group(1), db);
+            } else if ((m = STORE_CMD.matcher(query)).matches()) {
+                return storeTable(m.group(1), db);
+            } else if ((m = DROP_CMD.matcher(query)).matches()) {
+                return dropTable(m.group(1), db);
+            } else if ((m = INSERT_CMD.matcher(query)).matches()) {
+                return insertRow(m.group(1), db);
+            } else if ((m = PRINT_CMD.matcher(query)).matches()) {
+                return printTable(m.group(1), db);
+            } else if ((m = SELECT_CMD.matcher(query)).matches()) {
+                return select(m.group(1), db);
+            } else {
+                throw new Exception("ERROR: MALFORMED QUERY: " + query);
+            }
+        }catch(Exception e){
+            return e.getMessage();
         }
     }
 
@@ -75,15 +79,20 @@ public class Parser {
      * @param expr Expression for creating a table
      * @param db The database that the command is applied to
      */
-    private static void createTable(String expr, Database db) {
+    private static String createTable(String expr, Database db) {
         Matcher m;
-        if ((m = CREATE_NEW.matcher(expr)).matches()) {
-            createNewTable(m.group(1), m.group(2).trim().split(COMMA), db);
-        } else if ((m = CREATE_SEL.matcher(expr)).matches()) {
-            createSelectedTable(m.group(1), m.group(2), m.group(3), m.group(4), db);
-        } else {
-            System.err.printf("ERROR: MALFORMED CREATE: %s\r\n", expr);
+        try {
+            if ((m = CREATE_NEW.matcher(expr)).matches()) {
+                createNewTable(m.group(1), m.group(2).trim().split(COMMA), db);
+            } else if ((m = CREATE_SEL.matcher(expr)).matches()) {
+                createSelectedTable(m.group(1), m.group(2), m.group(3), m.group(4), db);
+            } else {
+                return "ERROR: MALFORMED CREATE: " + expr;
+            }
+        } catch (Exception e) {
+            return e.getMessage();
         }
+        return "";
     }
 
     /**
@@ -92,15 +101,13 @@ public class Parser {
      * @param cols An array of string. Each item contains the name and type of a column.
      * @param db The database where the new table will be
      */
-    private static void createNewTable(String name, String[] cols, Database db) {
+    private static void createNewTable(String name, String[] cols, Database db) throws Exception {
         String[] colInfo = new String[cols.length * 2];
         for (int i = 0; i < colInfo.length; i += 2) {
             //Get each column's name and type.
             String[] temp = cols[i / 2].split(WHITESPACE);
             if (temp.length != 2) {
-                System.err.println("ERROR: INCORRECT COLUMN INFORMATION: " + cols[i / 2]);
-                System.out.print(Main.PROMPT);
-                return;
+                throw new Exception("ERROR: INCORRECT COLUMN INFORMATION: " + cols[i / 2]);
             } else {
                 colInfo[i] = temp[0];
                 colInfo[i + 1] = temp[1];
@@ -117,10 +124,8 @@ public class Parser {
      * @param conds Condition statements
      * @param database The database which contains the tables
      */
-    private static void createSelectedTable(String name, String exprs, String tables, String conds, Database db) {
+    private static void createSelectedTable (String name, String exprs, String tables, String conds, Database db) throws Exception{
         Table tb = select(exprs, tables, conds, db);
-        if (tb == null)
-            return;
         db.addTable(name, tb);
     }
 
@@ -129,8 +134,9 @@ public class Parser {
      * @param name Name of the table
      * @param db The database
      */
-    private static void loadTable(String name, Database db) {
+    private static String loadTable(String name, Database db) throws Exception{
         db.loadTable(name);
+        return "";
     }
 
     /**
@@ -138,8 +144,9 @@ public class Parser {
     * @param name Table name.
     * @param db The database which contains the table
     */
-    private static void storeTable(String name, Database db) {
+    private static String storeTable(String name, Database db) throws Exception{
         db.storeTable(name);
+        return "";
     }
 
     /**
@@ -147,8 +154,9 @@ public class Parser {
     * @param name Table name
     * @param db The database which contains the table
     */
-    private static void dropTable(String name, Database db) {
+    private static String dropTable(String name, Database db) throws Exception{
         db.storeTable(name);
+        return "";
     }
 
     /**
@@ -156,15 +164,19 @@ public class Parser {
     * @param expr The command line which contains table name and data of row
     * @param db The database which contains the table
     */
-    private static void insertRow(String expr, Database db) {
+    private static String insertRow(String expr, Database db) throws Exception{
         Matcher m = INSERT_CLS.matcher(expr);
         if (!m.matches()) {
-            System.err.printf("ERROR: MALFORMED INSERT: %s\r\n", expr);
-            return;
+            throw new Exception("ERROR: MALFORMED INSERT: " + expr);
         }
         String name = m.group(1);
-        String[] row = m.group(2).split(COMMA);
+        String rowExpr = m.group(2);
+        if (!ROW.matcher(rowExpr).matches()) {
+            throw new Exception("ERROR: MALFORMED ROW EXPRESSION: " + rowExpr);
+        }
+        String[] row = rowExpr.split(COMMA);
         db.insertRowInto(name, row);
+        return "";
     }
 
     /**
@@ -172,8 +184,8 @@ public class Parser {
     * @param name Table name.
     * @param db The database which contains the table
     */
-    private static void printTable(String name, Database db) {
-        db.printTable(name);
+    private static String printTable(String name, Database db) throws Exception{
+        return db.printTable(name);
     }
 
     /**
@@ -182,16 +194,13 @@ public class Parser {
      * @param expr Select clause
      * @param db The database to be operated
      */
-    private static void select(String expr, Database db) {
+    private static String select(String expr, Database db) throws Exception{
         Matcher m = SELECT_CLS.matcher(expr);
         if (!m.matches()) {
-            System.err.printf("ERROR: MALFORMED SELECT: %s\r\n", expr);
-            return;
+            throw new Exception("ERROR: MALFORMED SELECT: " + expr);
         }
-        Table tb = select(m.group(1), m.group(2), m.group(3), db);
-        if (tb == null)
-            return;
-        System.out.println(tb);
+        Table tb = select(m.group(1), m.group(2).trim(), m.group(3), db);
+        return tb.toString();
     }
 
     /**
@@ -203,20 +212,19 @@ public class Parser {
     * @param db The database to be operated
     * @return The table generated by select clause or null if error happens
     */
-    private static Table select(String colExprs, String tables, String conditions, Database db) {
+    private static Table select(String colExprs, String tables, String conditions, Database db) throws Exception{
         String[] tbStrings = tables.split(COMMA);
         Table[] tbs = new Table[tbStrings.length];
 
         for (int i = 0; i < tbs.length; i++) {
             String tb = tbStrings[i];
             if (!db.getTables().containsKey(tb)) {
-                Database.printNotExist(tb);
-                return null;
+                throw new TableNotExistException(tb);
             }
             tbs[i] = db.getTables().get(tb);
         }
 
-        String[] exprs = colExprs.split(COMMA, 8);
+        String[] exprs = colExprs.split(COMMA);
         if (conditions == null)
             return Select.select(exprs, null, tbs);
         String[] conds = conditions.split(AND);
@@ -277,7 +285,7 @@ public class Parser {
      * @param type Data passed in as string
      * @return Type of the data.
      */
-    public static String parseType(String type) {
+    public static String parseType(String type) throws IllegalArgumentException{
         Matcher m;
         if (type.equals("NOVALUE")) {
             return "NOVALUE";
@@ -294,8 +302,7 @@ public class Parser {
         if ((m = INT.matcher(type)).matches()) {
             return "int";
         }
-        System.err.printf("ERROR: ILLEGAL DATA TYPE: %s.\r\n", type);
-        return null;
+        throw new IllegalArgumentException("ERROR: ILLEGAL DATA TYPE: " + type);
     }
 
 }

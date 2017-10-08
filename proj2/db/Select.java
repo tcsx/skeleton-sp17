@@ -9,19 +9,13 @@ import java.util.regex.Matcher;
  * Contains methods essential to select commands.
  */
 public class Select {
-    public static Table select(String[] exprs, String[] conds, Table[] tbs) {
+    public static Table select(String[] exprs, String[] conds, Table[] tbs) throws Exception{
         Table tb = join(tbs);
         if (exprs.length != 1 || !"*".equals(exprs[0])) {
             tb = colFilter(exprs, tb);
-            if (tb == null) {
-                return null;
-            }
         }
         if (conds != null) {
             tb = rowFilter(conds, tb);
-            if (tb == null) {
-                return null;
-            }
         }
         return tb;
     }
@@ -32,7 +26,7 @@ public class Select {
      * @param tb Table to which condition statements will be applied
      * @return The table after condition statements are applied or null if any error happens
      */
-    public static Table rowFilter(String[] conds, Table tb) {
+    public static Table rowFilter(String[] conds, Table tb) throws Exception{
         Table newTable = new Table(tb);
         Matcher m;
         for (int i = 0; i < tb.rowNum(); i++) {
@@ -41,8 +35,7 @@ public class Select {
                 if ((m = Parser.CONDS.matcher(cond)).matches()) {
                     String cp1 = m.group(1);
                     if (!tb.contains(cp1)) {
-                        printColNotExist(cp1);
-                        return null;
+                        throw new ColNotExistException(cp1);
                     }
                     String comparator = m.group(2);
                     String cp2 = m.group(3);
@@ -50,16 +43,14 @@ public class Select {
                     String type1 = tb.getType(cp1);
                     if (Parser.NAMES.matcher(cp2).matches()) {
                         if (!tb.contains(cp2)) {
-                            printColNotExist(cp2);
-                            return null;
+                            throw new ColNotExistException(cp2);
                         }
                         String type2 = tb.getType(cp2);
                         if (Operation.STRING.equals(type1) && Operation.STRING.equals(type2)) {
                             isString = true;
                         } else if (Operation.STRING.equals(type1) || Operation.STRING.equals(type2)) {
-                            System.err.printf("ERROR: CANNOT COMPARE COLUMN %s AND COLUMN %s. TYPE MISMATCH.\r\n", cp1,
-                                    cp2);
-                            return null;
+                            throw new Exception(String.format("ERROR: CANNOT COMPARE COLUMN %s AND COLUMN %s. TYPE MISMATCH.", cp1,
+                                    cp2));
                         }
                         if (!Compare.compare(tb.getItem(cp1, i), tb.getItem(cp2, i), comparator, isString)) {
                             match = false;
@@ -72,9 +63,8 @@ public class Select {
                         if (Operation.STRING.equals(type1) && Operation.STRING.equals(type2)) {
                             isString = true;
                         } else if (Operation.STRING.equals(type1) || Operation.STRING.equals(type2)) {
-                            System.err.printf("ERROR: CANNOT COMPARE COLUMN %s AND LITERAL %s. TYPE MISMATCH.\r\n", cp1,
-                                    cp2);
-                            return null;
+                            throw new Exception(String.format("ERROR: CANNOT COMPARE COLUMN %s AND LITERAL %s. TYPE MISMATCH.", cp1,
+                                    cp2));
                         }
                         if (!Compare.compare(tb.getItem(cp1, i), cp2, comparator, isString)) {
                             match = false;
@@ -82,8 +72,7 @@ public class Select {
                         }
                     }
                 } else {
-                    System.err.println("ERROR: INCORRECT CONDITIONAL STATEMENTS: " + cond);
-                    return null;
+                    throw new Exception("ERROR: INCORRECT CONDITIONAL STATEMENTS: " + cond);
                 }
             }
             if (match == true) {
@@ -99,7 +88,7 @@ public class Select {
      * @param tb Table to which column expressions will be applied
      * @return The table after column expressions are applied or null if any error happens
      */
-    public static Table colFilter(String[] exprs, Table tb) {
+    public static Table colFilter(String[] exprs, Table tb) throws Exception{
         Table newTable = new Table();
         Matcher m;
         for (String expr : exprs) {
@@ -108,18 +97,13 @@ public class Select {
                 if (cols.containsKey(expr))
                     newTable.addCol(expr, tb.getColumn(expr));
                 else {
-                    printColNotExist(expr);
-                    return null;
+                    throw new ColNotExistException(expr);
                 }
             } else if ((m = Parser.COLEXPR.matcher(expr)).matches()) {
                 Table.Column col = Operation.operation(m.group(1), m.group(2), m.group(3), m.group(4), tb);
-                if (col == null) {
-                    return null;
-                }
                 newTable.addCol(m.group(4), col);
             } else {
-                System.err.println("ERROR: WRONG COLUMN EXPRESSION: " + expr);
-                return null;
+                throw new Exception("ERROR: WRONG COLUMN EXPRESSION: " + expr);
             }
 
         }
@@ -129,7 +113,7 @@ public class Select {
     /**
     * @return The result of joining t1 and t2.
     */
-    public static Table join(Table t1, Table t2) {
+    public static Table join(Table t1, Table t2) throws Exception{
         Table joinedTb = new Table(t1.joinColInfo(t2));
         List<String> joinedColSeq = joinedTb.getColNameSeq();
         for (int i = 0; i < t1.rowNum(); i++) {
@@ -157,7 +141,7 @@ public class Select {
     /**
      * @return The result of joining an array of tables.
      */
-    public static Table join(Table[] tables) {
+    public static Table join(Table[] tables) throws Exception{
         if (tables.length == 1) {
             return tables[0];
         }
@@ -168,8 +152,8 @@ public class Select {
         return result;
     }
 
-    public static void printColNotExist(String col) {
-        System.err.println("ERROR: COLUMN " + col + " DOES NOT EXIST.");
+    public static String colNotExist(String col) {
+        return String.format("ERROR: COLUMN " + col + " DOES NOT EXIST.");
     }
 
 }

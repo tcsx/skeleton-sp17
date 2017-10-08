@@ -111,25 +111,22 @@ public class Operation {
      * @param tb The table to which the column expression is applied
      * @return The result column of the column expression
      */
-    public static Table.Column operation(String op1, String oprtr, String op2, String alias, Table tb) {
+    public static Table.Column operation(String op1, String oprtr, String op2, String alias, Table tb) throws Exception {
         HashMap<String, Table.Column> cols = tb.getCols();
         Table.Column newCol = null;
         if (!cols.containsKey(op1)) {
-            Select.printColNotExist(op1);
-            return null;
+            throw new ColNotExistException(op1);
         }
         Table.Column col1 = tb.getColumn(op1);
         String type1 = col1.getType();
         if (Parser.NAMES.matcher(op2).matches()) {
             if (!cols.containsKey(op2)) {
-                Select.printColNotExist(op2);
-                return null;
+                throw new ColNotExistException(op2);
             }
             Table.Column col2 = tb.getColumn(op2);
             String type = typesMatch(type1, col2.getType());
             if (type == null) {
-                System.err.printf("ERROR: COLUMN %s AND COLUMN %s TYPE MISMATCH.\r\n", op1, op2);
-                return null;
+                throw new Exception(String.format("ERROR: COLUMN %s AND COLUMN %s TYPE MISMATCH.", op1, op2));
             }
             newCol = tb.new Column(type);
             operation(col1, col2, oprtr, newCol);
@@ -138,13 +135,11 @@ public class Operation {
             if(type2 == null)
                     return null;
             if (NOVALUE.equals(type2) || NAN.equals(type2)){
-                System.err.println("ERROR: SPECIAL VALUE IS NOT ALLOWED IN COLUMN EXPRESSIONS");
-                return null;
+                throw new Exception(String.format("ERROR: SPECIAL VALUE IS NOT ALLOWED IN COLUMN EXPRESSIONS"));
             }
             String type = typesMatch(type1, type2);
             if (type == null) {
-                System.err.printf("ERROR: COLUMN %s AND LITERAL %s TYPE MISMATCH.\r\n", op1, op2);
-                return null;
+                throw new Exception(String.format("ERROR: COLUMN %s AND LITERAL %s TYPE MISMATCH.", op1, op2));
             }
             newCol = tb.new Column(type);
             for (int i = 0; i < col1.size(); i++) {

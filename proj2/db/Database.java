@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,10 +39,9 @@ public class Database {
      * 		  An array of its column names and types. The name of first column is 
      *        at index 0 and its type is at index 1, and so on.
      */
-    public void createTable(String name, String[] colInfo) {
+    public void createTable(String name, String[] colInfo) throws Exception{
         if (tables.containsKey(name)) {
-            System.err.println("ERROR: TABLE ALREADY EXISTS.");
-            return;
+            throw new Exception("ERROR: TABLE ALREADY EXISTS.");
         }
         tables.put(name, new Table(colInfo));
     }
@@ -54,7 +54,7 @@ public class Database {
      * 		  A List of its column names and types. The name of first column is 
      *        at index 0 and its type is at index 1, and so on.
      */
-    public void createTable(String name, List<String> colInfo) {
+    public void createTable(String name, List<String> colInfo) throws Exception{
         String[] cols = colInfo.toArray(new String[0]);
         createTable(name, cols);
     }
@@ -70,7 +70,7 @@ public class Database {
      * Load certain table from a tbl file to the database
      * @param name Name of the table
      */
-    public void loadTable(String name) {
+    public void loadTable(String name) throws Exception{
         try {
             BufferedReader in = new BufferedReader(new FileReader(name + Table.TBL));
             try {
@@ -80,22 +80,21 @@ public class Database {
                 String rowExper;
                 while ((rowExper = in.readLine()) != null) {
                     String[] row = Parser.parseRow(rowExper);
-                    if (!table.insertRow(row, true))
-                        return;
+                    table.insertRow(row, true);
                 }
                 tables.put(name, table);
-            } catch (Exception e) {
-                System.err.println("ERROR: PARSE FILE %s FAILED." + e.toString());
-                return;
-            } finally {
+            } catch (IOException e) {
+                System.err.println("ERROR: PARSE FILE %s FAILED." + e.getMessage());
+            } catch(IllegalArgumentException e){
+                throw e;
+            }finally {
                 try {
                     in.close();
                 } catch (Exception e) {
                 }
             }
         } catch (FileNotFoundException e) {
-            System.err.printf("ERROR: FILE NAMED %s NOT FOUND.\r\n", name);
-            return;
+            throw new FileNotFoundException(String.format("ERROR: FILE NAMED %s NOT FOUND.", name));
         }
     }
 
@@ -104,43 +103,32 @@ public class Database {
      * @param name The name of the table
      * @param row The row to be inserted
      */
-    public void insertRowInto(String name, String[] row) {
+    public void insertRowInto(String name, String[] row) throws Exception{
         if (!tables.containsKey(name)) {
-            printNotExist(name);
-            return;
+            throw new TableNotExistException(name);
         }
         getTable(name).insertRow(row, false);
     }
 
-    /**
-     * Print error message if the table doesn't exist.
-     * @param name Table name;
-     */
-    public static void printNotExist(String name) {
-        System.err.printf("ERROR: THE TABLE NAMED %s DOESN'T EXIST.\r\n", name);
-        return;
-    }
 
     /**
      * Print table
      * @param name Table name.
      */
-    public void printTable(String name) {
+    public String printTable(String name) throws Exception{
         if (!tables.containsKey(name)) {
-            printNotExist(name);
-            return;
+            throw new TableNotExistException(name);
         }
-        System.out.println(getTable(name));
+        return getTable(name).toString();
     }
 
     /**
      * Store table to file.
      * @param name Table name.
      */
-    public void storeTable(String name) {
+    public void storeTable(String name) throws Exception{
         if (!tables.containsKey(name)) {
-            printNotExist(name);
-            return;
+            throw new TableNotExistException(name);
         }
         File file = new File(name + Table.TBL);
         BufferedWriter fout = null;
@@ -152,7 +140,7 @@ public class Database {
             fout.write(this.getTable(name).toString(false));
             fout.flush();
         } catch (Exception e) {
-            System.err.println("ERROR: STORE FILE FAILED.");
+            throw e;
         } finally {
             try {
                 fout.close();
@@ -165,10 +153,9 @@ public class Database {
     * Drop certain table from the database.
     * @param name Table name.
     */
-    public void dropTable(String name) {
+    public void dropTable(String name) throws Exception{
         if (!tables.containsKey(name)) {
-            printNotExist(name);
-            return;
+            throw new TableNotExistException(name);
         }
         tables.remove(name);
     }
@@ -177,7 +164,7 @@ public class Database {
     * Transact function of the database
     * @param query Command passed to this function
     */
-    public static void transact(String query, Database db) {
-        Parser.eval(query, db);
+    public String transact(String query) {
+        return Parser.eval(query, this);
     }
 }
