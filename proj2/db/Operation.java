@@ -110,6 +110,7 @@ public class Operation {
      * @param alias The name of the result column
      * @param tb The table to which the column expression is applied
      * @return The result column of the column expression
+     * @throws Exception if error happens in the operation
      */
     public static Table.Column operation(String op1, String oprtr, String op2, String alias, Table tb) throws Exception {
         HashMap<String, Table.Column> cols = tb.getCols();
@@ -154,7 +155,7 @@ public class Operation {
      * @param col1 First column
      * @param col2 Second column
      * @param oprtr Operator
-     * @newCol The result of applying operator to the two columns
+     * @param newCol The result of applying operator to the two columns
      */
     public static void operation(Table.Column col1, Table.Column col2, String oprtr, Table.Column newCol) {
         String type1 = col1.getType();
@@ -190,7 +191,8 @@ public class Operation {
      * Check if two types are compatible for operation.
      * @param t1 First type
      * @param t2 Second type
-     * @return The type of the result of the operation with operands of type t1 and t2 or null if their types mismatch.
+     * @return The type of the result of the operation with operands of type t1 and 
+     *         t2 or null if their types mismatch.
      */
     public static String typesMatch(String t1, String t2) {
         if (STRING.equals(t1)) {

@@ -85,7 +85,7 @@ public class Database {
                 tables.put(name, table);
             } catch (IOException e) {
                 System.err.println("ERROR: PARSE FILE %s FAILED." + e.getMessage());
-            } catch(IllegalArgumentException e){
+            } catch(Exception e){
                 throw e;
             }finally {
                 try {
@@ -114,6 +114,7 @@ public class Database {
     /**
      * Print table
      * @param name Table name.
+     * @return the string representation of the table
      */
     public String printTable(String name) throws Exception{
         if (!tables.containsKey(name)) {
@@ -163,6 +164,7 @@ public class Database {
     /**
     * Transact function of the database
     * @param query Command passed to this function
+    * @return String resulted by the command
     */
     public String transact(String query) {
         return Parser.eval(query, this);

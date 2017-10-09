@@ -242,27 +242,27 @@ public class Table {
     /**
      * Check if the row expression matches the types of this table.
      * @param row Row expression passed to this method.
-     * @return True if and only if row expression matches the types of this table.
+     * @throws Exception if the row does not match the table.
      */
-    public void checkRowType(String[] row, boolean allowSpecialValue) throws IllegalArgumentException {
+    public void checkRowType(String[] row, boolean allowSpecialValue) throws Exception {
         if (row.length == colNum()) {
             for (int i = 0; i < row.length; i++) {
                 Column col = getColumn(i);
                 if (!col.checkType(row[i], allowSpecialValue)) {
-                    throw new IllegalArgumentException(String.format("ERROR: DATA %s DOES NOT MATCH COLUMN TYPE.", row[i]));
+                    throw new Exception(String.format("ERROR: DATA %s DOES NOT MATCH COLUMN TYPE.", row[i]));
                 }
             }
         }else{
-            throw new IllegalArgumentException("ERROR: THE LENGTH OF ROW DOES NOT MATCH THE NUMBER OF COLUMNS. ");
+            throw new Exception("ERROR: THE LENGTH OF ROW DOES NOT MATCH THE NUMBER OF COLUMNS. ");
         }
     }
 
     /**
      * Insert row into table;
      * @param row Row expression passed in.
-     * @return True on success.
+     * @throws Exception if the row expression does not match the table.
      */
-    public void insertRow(String[] row, boolean allowSpecialValue) throws IllegalArgumentException{
+    public void insertRow(String[] row, boolean allowSpecialValue) throws Exception{
         checkRowType(row, allowSpecialValue);
         for (int i = 0; i < colNum(); i++) {
             getColumn(i).add(row[i]);

@@ -16,7 +16,7 @@ public class Parser {
             DROP_CMD = Pattern.compile("drop table " + REST), INSERT_CMD = Pattern.compile("insert into " + REST),
             PRINT_CMD = Pattern.compile("print " + REST), SELECT_CMD = Pattern.compile("select " + REST),
             COLHEAD = Pattern.compile("\\s*([a-zA-Z]+\\w*)\\s+(string|int|float)\\s*"),
-            ROW = Pattern.compile("\\s*([^\\r\\n\\t,]+)\\s*(?:,\\s*[\\d']+[^\\r\\n\\t,]*\\s*)*"),
+            ROW = Pattern.compile("\\s*([^\\r\\n\\t,]+)\\s*(?:,\\s*\\S+[^\\r\\n\\t,]*\\s*)*"),
             NAMES = Pattern.compile("[a-zA-Z]+\\w*"), STRING = Pattern.compile("'[^\\r\\n\\t',]*'"),
             FLOAT = Pattern.compile("[\\+\\-]?\\d*\\.\\d*"), INT = Pattern.compile("\\d+"),
             COLEXPR = Pattern.compile("(\\S+)\\s*([+\\-*/])\\s*([^,]+?)\\s+as\\s+([a-zA-Z]+\\w*)"),
@@ -27,26 +27,17 @@ public class Parser {
             .compile("([a-zA-Z]+\\w*)\\s+\\(\\s*([a-zA-Z]+\\w*\\s+(?:string|int|float)\\s*"
                     + "(?:,\\s*[a-zA-Z]+\\w*\\s+(?:string|int|float)\\s*)*)\\)"),
             SELECT_CLS = Pattern
-                    .compile("([^,]+?(?:,[^,]+?)*)\\s+from\\s+" + "(\\S+\\s*(?:,\\s*\\S+\\s*)*)(?:\\s+where\\s+"
+                    .compile("([^,]+?(?:,[^,]+?)*)\\s+from\\s+" + "(\\S+(?:\\s*,\\s*\\S+?)*)(?:\\s+where\\s+"
                             + "([\\w\\s+\\-*/'<>=!.]+?(?:\\s+and\\s+" + "[\\w\\s+\\-*/'<>=!.]+?)*))?"),
             CREATE_SEL = Pattern.compile("(\\S+)\\s+as\\s+select\\s+" + SELECT_CLS.pattern()),
             INSERT_CLS = Pattern.compile("(\\S+)\\s+values\\s+(.+?" + "(?:\\s*,\\s*.+?)*)\\s*");
 
-    // public static void main(String[] args) {
-    //     if (args.length != 1) {
-    //         System.err.println("Expected a single query argument");
-    //         return;
-    //     }
-
-    //     eval(args[0]);
-    // }
-
     /**
      * Parse the type of the command and pass the sentence of the query to 
      * corresponding parse function. 
-     * 
      * @param query Command
      * @param db The database that the command is applied to
+     * @return String resulted from the query
      */
     public static String eval(String query, Database db) {
         Matcher m;
@@ -78,6 +69,7 @@ public class Parser {
      * clause and pass them to the next parse function.
      * @param expr Expression for creating a table
      * @param db The database that the command is applied to
+     * @return Empty String on success, or an error message otherwise.
      */
     private static String createTable(String expr, Database db) {
         Matcher m;
@@ -100,6 +92,7 @@ public class Parser {
      * @param name Name of the new table
      * @param cols An array of string. Each item contains the name and type of a column.
      * @param db The database where the new table will be
+     * @throws Exception if error happens in processing the command
      */
     private static void createNewTable(String name, String[] cols, Database db) throws Exception {
         String[] colInfo = new String[cols.length * 2];
@@ -121,8 +114,9 @@ public class Parser {
      * @param name Table name
      * @param exprs Column expressions
      * @param tables Table names
-     * @param conds Condition statements
+     * @param conds Conditional statements
      * @param database The database which contains the tables
+     * @throws Exception if error happens in processing the command
      */
     private static void createSelectedTable (String name, String exprs, String tables, String conds, Database db) throws Exception{
         Table tb = select(exprs, tables, conds, db);
@@ -133,6 +127,8 @@ public class Parser {
      * Load certain table from a tbl file to the database
      * @param name Name of the table
      * @param db The database
+     * @return Empty String on success.
+     * @throws Exception if error happens in processing the command
      */
     private static String loadTable(String name, Database db) throws Exception{
         db.loadTable(name);
@@ -143,6 +139,8 @@ public class Parser {
     * Store table to file.
     * @param name Table name.
     * @param db The database which contains the table
+    * @return Empty String on success.
+    * @throws Exception if error happens in processing the command
     */
     private static String storeTable(String name, Database db) throws Exception{
         db.storeTable(name);
@@ -153,6 +151,8 @@ public class Parser {
     * Drop certain table from the database.
     * @param name Table name
     * @param db The database which contains the table
+    * @return Empty String on success.
+    * @throws Exception if error happens in processing the command
     */
     private static String dropTable(String name, Database db) throws Exception{
         db.storeTable(name);
@@ -163,6 +163,8 @@ public class Parser {
     * Insert a row into a table.
     * @param expr The command line which contains table name and data of row
     * @param db The database which contains the table
+    * @return Empty String on success.
+    * @throws Exception if error happens in processing the command
     */
     private static String insertRow(String expr, Database db) throws Exception{
         Matcher m = INSERT_CLS.matcher(expr);
@@ -183,6 +185,8 @@ public class Parser {
     * Print certain table
     * @param name Table name.
     * @param db The database which contains the table
+    * @return the string representation of the table
+    * @throws Exception if error happens in processing the command
     */
     private static String printTable(String name, Database db) throws Exception{
         return db.printTable(name);
@@ -193,13 +197,15 @@ public class Parser {
      * select clause or print error information if error happens.
      * @param expr Select clause
      * @param db The database to be operated
+     * @return the string representation of the result table
+     * @throws Exception if error happens in processing the command
      */
     private static String select(String expr, Database db) throws Exception{
         Matcher m = SELECT_CLS.matcher(expr);
         if (!m.matches()) {
             throw new Exception("ERROR: MALFORMED SELECT: " + expr);
         }
-        Table tb = select(m.group(1), m.group(2).trim(), m.group(3), db);
+        Table tb = select(m.group(1), m.group(2), m.group(3), db);
         return tb.toString();
     }
 
@@ -208,9 +214,10 @@ public class Parser {
     *  by select clause or print error information and return null if error happens.
     * @param colExprs Column expressions in the select clause
     * @param tables Table names in the select clause
-    * @param conditions Condition statements in the select clause
+    * @param conditions Conditional statements in the select clause
     * @param db The database to be operated
     * @return The table generated by select clause or null if error happens
+    * @throws Exception if error happens in processing the command
     */
     private static Table select(String colExprs, String tables, String conditions, Database db) throws Exception{
         String[] tbStrings = tables.split(COMMA);
@@ -275,7 +282,7 @@ public class Parser {
                 r = r.trim();
             }
         } else {
-            throw new IllegalArgumentException("ILLEGAL ROW EXPRESSION.");
+            throw new IllegalArgumentException("ILLEGAL ROW EXPRESSION." + expr);
         }
         return row;
     }
@@ -284,6 +291,7 @@ public class Parser {
      * Parse the type of data.
      * @param type Data passed in as string
      * @return Type of the data.
+     * @throws IllegalArgumentException if the the passed in data does not match any type.
      */
     public static String parseType(String type) throws IllegalArgumentException{
         Matcher m;

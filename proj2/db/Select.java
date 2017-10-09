@@ -9,6 +9,14 @@ import java.util.regex.Matcher;
  * Contains methods essential to select commands.
  */
 public class Select {
+
+    /**
+     * Take in arrays of column expressions, conditional statements and tables and return the result table of the select operation.
+     * @param exprs Column expressions
+     * @param cond Conditional statements
+     * @param table Tables passed in
+     * @throws Exception if error happens in the select operation
+     */
     public static Table select(String[] exprs, String[] conds, Table[] tbs) throws Exception{
         Table tb = join(tbs);
         if (exprs.length != 1 || !"*".equals(exprs[0])) {
@@ -21,10 +29,12 @@ public class Select {
     }
 
     /**
-     * Apply condition statements to table and returns the result table.
-     * @param cond Condition statements passed in as array
-     * @param tb Table to which condition statements will be applied
-     * @return The table after condition statements are applied or null if any error happens
+     * Apply conditional statements to table and returns the result table.
+     * @param cond Conditional statements passed in as array
+     * @param tb Table to which conditional statements will be applied
+     * @return The table after conditional statements are applied or null if any error happens
+     * 
+     * @throws Exception if the conditional statements are malformed or incompatible with the table
      */
     public static Table rowFilter(String[] conds, Table tb) throws Exception{
         Table newTable = new Table(tb);
@@ -87,6 +97,7 @@ public class Select {
      * @param exprs Column expressions passed in as array
      * @param tb Table to which column expressions will be applied
      * @return The table after column expressions are applied or null if any error happens
+     *@throws Exception if column expressions are malformed or incompatibel with the table 
      */
     public static Table colFilter(String[] exprs, Table tb) throws Exception{
         Table newTable = new Table();
@@ -113,7 +124,7 @@ public class Select {
     /**
     * @return The result of joining t1 and t2.
     */
-    public static Table join(Table t1, Table t2) throws Exception{
+    public static Table join(Table t1, Table t2) {
         Table joinedTb = new Table(t1.joinColInfo(t2));
         List<String> joinedColSeq = joinedTb.getColNameSeq();
         for (int i = 0; i < t1.rowNum(); i++) {
@@ -132,7 +143,11 @@ public class Select {
                     newRow[j] = t2.getItem(iterator.next(), rowId);
                     j++;
                 }
+                try{
                 joinedTb.insertRow(newRow, true);
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
             }
         }
         return joinedTb;
@@ -141,7 +156,7 @@ public class Select {
     /**
      * @return The result of joining an array of tables.
      */
-    public static Table join(Table[] tables) throws Exception{
+    public static Table join(Table[] tables) {
         if (tables.length == 1) {
             return tables[0];
         }
